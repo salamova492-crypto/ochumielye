@@ -2,7 +2,6 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop, uat]
   pull_request:
     branches: [main, develop, uat]
 
@@ -10,8 +9,49 @@ env:
   COMPOSER_NO_INTERACTION: 1
 
 jobs:
+  lint-fix:
+    name: Auto Fix Code Style
+    if: github.ref_name != 'main' && github.ref_name != 'develop' && github.ref_name != 'uat' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer update --no-progress --prefer-dist
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Run Laravel Pint (auto fix)
+        run: vendor/bin/pint --config=vendor/laravel/pint/pint.json
+
+      - name: Commit auto-fixed changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "Apply Pint auto-fix [skip ci]"
+          git push
+
   quality:
     name: Quality Checks
+    if: github.ref_name == 'main' || github.ref_name == 'develop' || github.ref_name == 'uat' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     services:
@@ -56,10 +96,7 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Run Laravel Pint - auto fix
-        run: vendor/bin/pint --config=vendor/laravel/pint/pint.json
-
-      - name: Run Laravel Pint (Lint) - check mode
+      - name: Run Laravel Pint (strict check)
         run: vendor/bin/pint --test --config=vendor/laravel/pint/pint.json
 
       - name: Run PHPStan (Static Analysis)
@@ -82,6 +119,7 @@ jobs:
 
   deploy-simulation:
     name: Deploy Simulation
+    if: github.ref_name == 'main' || github.ref_name == 'develop' || github.ref_name == 'uat'
     needs: quality
     runs-on: ubuntu-latest
     environment:
@@ -119,8 +157,8 @@ jobs:
 
   notify:
     name: Notify Maintainers
+    if: always()
     needs: [quality, deploy-simulation]
-    if: always() && needs.quality.result != 'skipped'
     runs-on: ubuntu-latest
 
     steps:

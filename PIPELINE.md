@@ -8,12 +8,19 @@ This CI/CD pipeline automates quality checks, testing, and deployment simulation
 
 ```mermaid
 flowchart LR
-    A[Push / PR] --> B[Quality Checks]
-    B --> C[Deploy Simulation]
-    C --> D[Notify Maintainers]
+    A[Push / PR] --> B{Protected branch?}
+    B -->|main / develop / uat| C[Quality Checks]
+    B -->|other| D[Auto Fix Code Style]
+    C --> E[Deploy Simulation]
+    E --> F[Notify Maintainers]
+    D --> G[Done]
 ```
 
-### Stages
+### Jobs
+
+#### 0. Auto Fix Code Style (`jobs.lint-fix`)
+
+Runs on **push to any non-protected branch** (not `main`, `develop`, or `uat`). Runs Laravel Pint in auto-fix mode and commits the changes back to the branch with `[skip ci]` in the commit message to avoid re-triggering the pipeline.
 
 #### 1. Quality Checks (`jobs.quality`)
 
@@ -22,7 +29,7 @@ Runs on every push/PR to `main`, `develop`, or `uat`. Includes:
 | Step | Tool | Description |
 |------|------|-------------|
 | **Linting** | Laravel Pint (PSR-12) | Runs in `--test` mode — fails if any code style violation is found |
-| **Static Analysis** | PHPStan (Larastan) | Level 6 analysis — fails on any error (not just warnings) |
+| **Static Analysis** | PHPStan (Larastan) | Level 5 — fails on any error (not just warnings) |
 | **Tests** | PHPUnit | Executes full test suite with code coverage |
 | **Coverage Gate** | PHP script | Fails pipeline if code coverage < **50%** |
 
