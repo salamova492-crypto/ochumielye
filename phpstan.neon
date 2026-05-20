@@ -10,5 +10,3 @@ parameters:
         - app/Console/
     checkMissingIterableValueType: false
     checkGenericClassInNonGenericObjectType: false
-    databaseMigrationsPath:
-        - database/migrations/
