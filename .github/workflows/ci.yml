@@ -67,7 +67,6 @@ jobs:
 
       - name: Check coverage >= 50%
         run: |
-          COVERAGE=$(php -r "echo \$(json_decode(file_get_contents('coverage-report/clover.xml'))->project->metrics->elements) ? 0 : 0;")
           php -r "
             \$xml = simplexml_load_file('coverage-report/clover.xml');
             \$metrics = \$xml->project->metrics;
@@ -84,7 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || github.ref_name == 'uat' && 'uat' || 'development' }}
-      ${{ github.ref_name == 'main' && 'url: https://ochumelye.example.com' || '' }}
 
     steps:
       - name: Checkout code
