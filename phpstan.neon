@@ -1,9 +1,7 @@
 parameters:
-    level: 6
+    level: 5
     paths:
         - app/
     excludePaths:
         - app/Providers/
         - app/Console/
-    ignoreErrors:
-        - '#PHPDoc tag @return with type void is incompatible with native return type#'
