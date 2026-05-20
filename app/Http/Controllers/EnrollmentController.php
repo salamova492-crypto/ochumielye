@@ -52,6 +52,10 @@ class EnrollmentController extends Controller
                 ->with('error', 'Вы уже записаны на этот мастер-класс');
         }
 
+        if (Auth::user()->isLeader()) {
+            return back()->with('error', 'Руководители не могут записываться на мастер-классы');
+        }
+
         Enrollment::create([
             'master_class_id' => $masterClass->id,
             'user_id' => Auth::id(),

@@ -23,7 +23,7 @@ class MasterClassController extends Controller
         }
 
         $busySlots = MasterClass::where('leader_id', Auth::id())
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->pluck('time_slot')
             ->toArray();
 
@@ -66,7 +66,7 @@ class MasterClassController extends Controller
         ]);
 
         $busySlot = MasterClass::where('leader_id', $user->id)
-            ->where('date', $validated['date'])
+            ->whereDate('date', $validated['date'])
             ->where('time_slot', $validated['time_slot'])
             ->exists();
 

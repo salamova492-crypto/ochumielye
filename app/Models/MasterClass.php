@@ -27,7 +27,7 @@ class MasterClass extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            'date' => 'date:Y-m-d',
             'price' => 'decimal:2',
             'maxPeople' => 'integer',
         ];
