@@ -5,5 +5,5 @@ parameters:
     excludePaths:
         - app/Providers/
         - app/Console/
-    checkMissingIterableValueType: false
-    checkGenericClassInNonGenericObjectType: false
+    ignoreErrors:
+        - '#PHPDoc tag @return with type void is incompatible with native return type#'
